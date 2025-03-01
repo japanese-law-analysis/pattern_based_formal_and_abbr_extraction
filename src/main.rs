@@ -9,8 +9,16 @@
 //!
 
 use regex::Regex;
+use serde::Serialize;
+use clap::Parser;
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Parser)]
+struct AppArgs {
+  #[arg()]
+  text: String
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord, Serialize)]
 pub struct Abb {
   pub formal: String,
   pub abbr: String,
@@ -18,7 +26,7 @@ pub struct Abb {
 }
 
 /// 括弧を除去した際の情報
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct RemoveParenInfo {
   /// 括弧の出現位置
   pub index: usize,
@@ -180,4 +188,11 @@ pub fn analysis_abbr(
   v
 }
 
-fn main() {}
+fn main() {
+  let args = AppArgs::parse();
+  let text = args.text;
+  let (removed_paren_text, remove_paren_info_list) = remove_paren(&text);
+  let abb_list = analysis_abbr(&removed_paren_text, &remove_paren_info_list, false);
+  let json_str = serde_json::to_string_pretty(&abb_list).unwrap();
+  println!("{json_str}");
+}
